@@ -1,44 +1,15 @@
 import numpy as np
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, squareform
 import math
+import coordinate_methods
 
 
-def read_xyz_file(filename, dimensions):
-
-    print("Reading data from XYZ file.")
-
-    particle_positions = []
-    frame_number = 0
-    line_number = 0
-    with open(filename, 'r') as input_file:
-        for line in input_file:
-            if line_number == 0:
-                # Check for blank line at end of file
-                if line != "":
-                    frame_particles = int(line)
-                    particle_positions.append(np.zeros((frame_particles, dimensions)))
-            elif line_number == 1:
-                comment = line
-            else:
-                particle_positions[frame_number][line_number-2] = line.split()[1:]
-            line_number += 1
-            # If we have reached the last particle in the frame, reset counter for next frame
-            if line_number == (frame_particles + 2):
-                line_number = 0
-                frame_number += 1
-
-    print("XYZ read complete.")
-
-    return particle_positions
-
-
-def count_bonded_particles(particle_coordinates):
+def count_bonded_particles(particle_coordinates, bond_length):
     # A simple order parameter. Counts number of bonds where a bond is particle distance < 1.1
-    bond_length = 1.1
     bond_length_squared = bond_length ** 2
 
-    distance_matrix = cdist(particle_coordinates[0], particle_coordinates[0], metric='sqeuclidean')
-    bond_matrix = distance_matrix < bond_length_squared
+    distance_matrix = squareform(cdist(particle_coordinates, particle_coordinates, metric='sqeuclidean'))
+    bond_matrix = distance_matrix <= bond_length_squared
     num_overlaps = np.count_nonzero(bond_matrix)
 
     return num_overlaps
@@ -57,7 +28,7 @@ def get_cell_size(particle_coordinates, correlation_length):
         num_cells.append(math.ceil(box_size[dimension] / correlation_length))
         cell_size.append(box_size[dimension] / num_cells[dimension])
 
-    return num_cells, cell_size
+    return num_cells, cell_size, box_size
 
 
 def get_scalar_cell_index(cell_indices, num_cells):
@@ -80,3 +51,12 @@ def get_cell_index(particle_position, cell_lengths):
     return [x_index, y_index, z_index]
 
 
+def setup_cell_list(particle_coordinates, cell_size, num_cells):
+    pass
+
+
+def main():
+    particle_coordinates = coordinate_methods.read_xyz_file("sample_configuration", 3)
+    num_cells, cell_size, box_size = get_cell_size(particle_coordinates, 1)
+    particle_coordinates = coordinate_methods.wrap_coordinates(particle_coordinates, box_size)
+    cell_heads, links = setup_cell_list(particle_coordinates, cell_size, num_cells)
