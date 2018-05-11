@@ -32,7 +32,7 @@ class TestCellListMethods:
         # Given some coordinates, check the correct number of cells are generated.
 
         # Unit cell of size 10, 7, 5
-        coordinates = np.array([[0, 0, 0], [0, 0, 5], [0, 7, 0], [0, 7, 5], [10, 0, 0], [10, 0, 5], [10, 7, 0], [10, 7, 5]])
+        coordinates = np.array([[[0, 0, 0], [0, 0, 5], [0, 7, 0], [0, 7, 5], [10, 0, 0], [10, 0, 5], [10, 7, 0], [10, 7, 5]]])
 
         num_cells, cell_size, box_size = cell_list.get_cell_size(coordinates, 1)
         assert num_cells[0] == 10
@@ -60,4 +60,4 @@ class TestCellListMethods:
     def test_get_cell_index():
         # Given a particle position and the size of the cells, find the cell indices of the particle
 
-        assert cell_list.get_cell_index([0, 1.5, 2.5], [1, 1, 1]) == [0, 1, 2]
+        assert cell_list.get_vector_cell_index([0, 1.5, 2.5], [1, 1, 1]) == [0, 1, 2]
