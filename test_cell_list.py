@@ -3,6 +3,7 @@ import coordinate_methods
 import math
 import numpy as np
 
+
 class TestCoordinateMethods:
     @staticmethod
     def test_xyz_read():
@@ -17,7 +18,8 @@ class TestCoordinateMethods:
         # Check sample coordaintes are coorectly wrapped.
         wrapped_coordinates = coordinate_methods.wrap_coordinates([np.array([[0, 0, 0], [11, -1, 0], [11, 11, 12], [-1, -1, -1]])], [10, 10, 10])
 
-        assert np.array_equal(np.array([[0, 0, 0], [1, 9, 0], [1, 1, 2], [9, 9, 9]]), wrapped_coordinates[0]) == True
+        assert np.array_equal(np.array([[0, 0, 0], [1, 9, 0], [1, 1, 2], [9, 9, 9]]), wrapped_coordinates[0]) is True
+
 
 class TestCellListMethods:
     @staticmethod

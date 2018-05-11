@@ -70,17 +70,17 @@ def setup_cell_list(particle_coordinates, cell_size, num_cells):
     for dimension in num_cells:
         total_cells = total_cells * dimension
 
-    for frame in particle_coordinates:
+    for frame_index, frame in enumerate(particle_coordinates):
         heads.append([-1] * total_cells)
         particle_links.append([-1] * len(frame))
         for particle_index, particle in enumerate(frame):
             vector_index = get_vector_cell_index(particle, cell_size)
             scalar_index = get_scalar_cell_index(vector_index, num_cells)
-            if heads[particle_index] == -1:
-                heads[scalar_index] = particle_index
+            if heads[frame_index][scalar_index] == -1:
+                heads[frame_index][scalar_index] = particle_index
             else:
-                particle_links[particle_index] = heads[scalar_index]
-                heads[scalar_index] = particle_index
+                particle_links[frame_index][particle_index] = heads[frame_index][scalar_index]
+                heads[frame_index][scalar_index] = particle_index
     return heads, particle_links
 
 
@@ -115,8 +115,9 @@ def main(xyz_file_name):
     cell_heads, links = setup_cell_list(particle_coordinates, cell_size, num_cells)
 
     for frame in particle_coordinates:
-        inner_cell_vector_index = loop_over_inner_cells(num_cells)
-        neighbour_vector_index = loop_over_neighbour_cells(inner_cell_vector_index, num_cells)
+        for inner_cell_vector_index in loop_over_inner_cells(num_cells):
+            for neighbour_vector_index in loop_over_neighbour_cells(inner_cell_vector_index, num_cells):
+                pass  # do science
 
 
 if __name__ == '__main__':
