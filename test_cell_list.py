@@ -22,21 +22,17 @@ class TestCoordinateMethods:
 
 
 class TestCellListMethods:
-    @staticmethod
-    def test_count_bonded_particles():
-        particle_list = np.array([[0, 0, 0], [0, 0, 5], [0, 7, 0], [0, 7, 5], [10, 0, 0], [10, 0, 5], [10, 7, 0], [10, 7, 5]])
+    # cubic unit cell of size [10, 7, 5]
+    sample_coordinates = [np.array([[0, 0, 0], [0, 0, 5], [0, 7, 0], [0, 7, 5], [10, 0, 0], [10, 0, 5], [10, 7, 0], [10, 7, 5]])]
 
-        assert cell_list.count_bonded_particles(particle_list, bond_length=5) == 4
-        assert cell_list.count_bonded_particles(particle_list, bond_length=10) == 16
+    def test_count_bonded_particles(self):
+        assert cell_list.count_bonded_particles(self.sample_coordinates, bond_length=5) == 4
+        assert cell_list.count_bonded_particles(self.sample_coordinates, bond_length=10) == 16
 
-    @staticmethod
-    def test_cell_size():
+    def test_cell_size(self):
         # Given some coordinates, check the correct number of cells are generated.
 
-        # Unit cell of size 10, 7, 5
-        coordinates = np.array([[[0, 0, 0], [0, 0, 5], [0, 7, 0], [0, 7, 5], [10, 0, 0], [10, 0, 5], [10, 7, 0], [10, 7, 5]]])
-
-        num_cells, cell_size, box_size = cell_list.get_cell_size(coordinates, 1)
+        num_cells, cell_size, box_size = cell_list.get_cell_size(self.sample_coordinates, 1)
         assert num_cells[0] == 10
         assert num_cells[1] == 7
         assert num_cells[2] == 5
@@ -61,5 +57,36 @@ class TestCellListMethods:
     @staticmethod
     def test_get_cell_index():
         # Given a particle position and the size of the cells, find the cell indices of the particle
-
         assert cell_list.get_vector_cell_index([0, 1.5, 2.5], [1, 1, 1]) == [0, 1, 2]
+
+    @staticmethod
+    def test_setup_cell_list():
+        # Given some particles and some cells make the linked list and cell heads
+        heads, links = cell_list.setup_cell_list([np.array([[0.5, 1.5, 0.5], [1.5, 1.5, 1.5], [0.5, 1.25, 0.5], [0.8, 0.3, 1.6]])], [1, 1, 1], [2, 2, 2])
+
+        assert np.array_equal(heads, [[-1, 3, 2, -1, -1, -1, -1, 1]])
+        assert np.array_equal(links, [[-1, -1, 0, -1]])
+
+    @staticmethod
+    def test_loop_over_inner_cells():
+        # Given a number of cells, loop through them sequentially
+        index_list = []
+        for index in cell_list.loop_over_inner_cells([2, 2, 2]):
+            index_list.append(index)
+        assert index_list == [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
+
+    @staticmethod
+    def test_loop_over_neighbour_cells():
+        # Given a cell to start from and the total number of cells list the neighbours of the cell
+        index_list = []
+        for index in cell_list.loop_over_neighbour_cells([1, 1, 1], [3, 3, 3]):
+            index_list.append(index)
+        assert index_list == [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 1, 0], [0, 1, 1], [0, 1, 2], [0, 2, 0], [0, 2, 1], [0, 2, 2],
+                              [1, 0, 0], [1, 0, 1], [1, 0, 2], [1, 1, 0], [1, 1, 1], [1, 1, 2], [1, 2, 0], [1, 2, 1], [1, 2, 2],
+                              [2, 0, 0], [2, 0, 1], [2, 0, 2], [2, 1, 0], [2, 1, 1], [2, 1, 2], [2, 2, 0], [2, 2, 1], [2, 2, 2]]
+        index_list = []
+        for index in cell_list.loop_over_neighbour_cells([2, 2, 2], [3, 3, 3]):
+            index_list.append(index)
+        assert index_list == [[1, 1, 1], [1, 1, 2], [1, 1, 0], [1, 2, 1], [1, 2, 2], [1, 2, 0], [1, 0, 1], [1, 0, 2], [1, 0, 0],
+                              [2, 1, 1], [2, 1, 2], [2, 1, 0], [2, 2, 1], [2, 2, 2], [2, 2, 0], [2, 0, 1], [2, 0, 2], [2, 0, 0],
+                              [0, 1, 1], [0, 1, 2], [0, 1, 0], [0, 2, 1], [0, 2, 2], [0, 2, 0], [0, 0, 1], [0, 0, 2], [0, 0, 0]]

@@ -7,10 +7,11 @@ import coordinate_methods
 def count_bonded_particles(particle_coordinates, bond_length):
     # A simple order parameter. Counts number of bonds where a bond is particle distance < 1.1
     bond_length_squared = bond_length ** 2
-
-    distance_matrix = squareform(cdist(particle_coordinates, particle_coordinates, metric='sqeuclidean'))
-    bond_matrix = distance_matrix <= bond_length_squared
-    num_overlaps = np.count_nonzero(bond_matrix)
+    num_overlaps = 0
+    for frame in particle_coordinates:
+        distance_matrix = squareform(cdist(frame, frame, metric='sqeuclidean'))
+        bond_matrix = distance_matrix <= bond_length_squared
+        num_overlaps += np.count_nonzero(bond_matrix)
 
     return num_overlaps
 
@@ -63,6 +64,13 @@ def get_vector_cell_index(particle_position, cell_lengths):
 
 
 def setup_cell_list(particle_coordinates, cell_size, num_cells):
+    """
+    :param particle_coordinates:     A list of f numpy arrays of size N by d where f is the number of frames,
+     N is the number of particles and d is the number of spatial dimensions
+    :param cell_size: a list of cell sizes, one value for each dimension
+    :param num_cells: a list of integers, the total number of cells in each dimension
+    :return:
+    """
     heads = []
     particle_links = []
     total_cells = 1
@@ -85,6 +93,10 @@ def setup_cell_list(particle_coordinates, cell_size, num_cells):
 
 
 def loop_over_inner_cells(num_cells):
+    """
+    A generator to return the vector index of all cells sequentially
+    :param num_cells: a list of integers, the total number of cells in each dimension
+    """
     # A generator to return the index of the inner cell
     for x_cell in range(num_cells[0]):
         for y_cell in range(num_cells[1]):
@@ -93,15 +105,18 @@ def loop_over_inner_cells(num_cells):
 
 
 def loop_over_neighbour_cells(vector_cell_index, num_cells):
-    # A generator to return the index of neighbouring cells
-    neighbour_vector_index = []
-    for x_neighbour in range(vector_cell_index[0] - 1, vector_cell_index[0] + 1):
-        for y_neighbour in range(vector_cell_index[1] - 1, vector_cell_index[1] + 1):
-            for z_neighbour in range(vector_cell_index[2] - 1, vector_cell_index[2] + 1):
+    """
+    A generator to return the vector index of neighbouring cells
+    :param vector_cell_index: a list of integer cell indices, one for each dimension
+    :param num_cells: a list of integers, the total number of cells in each dimension
+    """
+    for x_neighbour in range(vector_cell_index[0] - 1, vector_cell_index[0] + 2):
+        for y_neighbour in range(vector_cell_index[1] - 1, vector_cell_index[1] + 2):
+            for z_neighbour in range(vector_cell_index[2] - 1, vector_cell_index[2] + 2):
                 neighbour_vector_index = [x_neighbour, y_neighbour, z_neighbour]
                 # Correct neighbour index for boundaries
                 for dimension in range(3):
-                    if neighbour_vector_index[dimension] > num_cells[dimension]:
+                    if neighbour_vector_index[dimension] > num_cells[dimension] - 1:
                         neighbour_vector_index[dimension] -= num_cells[dimension]
                     if neighbour_vector_index[dimension] < 0:
                         neighbour_vector_index[dimension] += num_cells[dimension]
