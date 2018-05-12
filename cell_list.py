@@ -4,8 +4,8 @@ import math
 import coordinate_methods
 
 
-def count_bonded_particles(particle_coordinates, bond_length):
-    # A simple order parameter. Counts number of bonds where a bond is particle distance < 1.1
+def get_simple_overlaps(particle_coordinates, bond_length):
+    # A simple order parameter. Counts number of particles separated by less than bond_length
     bond_length_squared = bond_length ** 2
     num_overlaps = 0
     for frame in particle_coordinates:
@@ -14,6 +14,32 @@ def count_bonded_particles(particle_coordinates, bond_length):
         num_overlaps += np.count_nonzero(bond_matrix)
 
     return num_overlaps
+
+
+def get_cell_list_overlaps(particle_coordinates, bond_length):
+    sq_bond_length = bond_length ** 2
+
+    num_cells, cell_size, box_size = get_cell_size(particle_coordinates, bond_length)
+    particle_coordinates = coordinate_methods.wrap_coordinates(particle_coordinates, box_size)
+    cell_heads, links = setup_cell_list(particle_coordinates, cell_size, num_cells)
+
+    overlap_count = []
+    for frame_index, frame in enumerate(particle_coordinates):
+        overlap_count.append(0)
+        for cell_vector_index in loop_over_inner_cells(num_cells):
+            cell_scalar_index = get_scalar_cell_index(cell_vector_index, num_cells)
+            for neighbour_vector_index in loop_over_neighbour_cells(cell_vector_index, num_cells):
+                neighbour_scalar_index = get_scalar_cell_index(neighbour_vector_index, num_cells)
+                particle_i = cell_heads[frame_index][cell_scalar_index]
+                while particle_i != -1:
+                    particle_j = cell_heads[frame_index][neighbour_scalar_index]
+                    while particle_j != -1:
+                        if particle_i < particle_j:
+                            overlap_count[frame_index] += check_overlap(particle_i, particle_j, frame, sq_bond_length)
+                        particle_j = links[frame_index][particle_j]
+                    particle_i = links[frame_index][particle_i]
+
+    return overlap_count
 
 
 def get_cell_size(particle_coordinates, correlation_length):
@@ -37,7 +63,7 @@ def get_cell_size(particle_coordinates, correlation_length):
     # Using the highest and lowest coordinates, generate cell numbers and sizes
     for dimension in range(spatial_dimensions):
         box_size.append(max_coord[dimension] - min_coord[dimension])
-        num_cells.append(math.ceil(box_size[dimension] / correlation_length))
+        num_cells.append(math.floor(box_size[dimension] / correlation_length))
         cell_size.append(box_size[dimension] / num_cells[dimension])
 
     return num_cells, cell_size, box_size
@@ -123,16 +149,23 @@ def loop_over_neighbour_cells(vector_cell_index, num_cells):
                 yield neighbour_vector_index
 
 
-def main(xyz_file_name):
-    particle_coordinates = coordinate_methods.read_xyz_file(xyz_file_name, 3)
-    num_cells, cell_size, box_size = get_cell_size(particle_coordinates, 1)
-    particle_coordinates = coordinate_methods.wrap_coordinates(particle_coordinates, box_size)
-    cell_heads, links = setup_cell_list(particle_coordinates, cell_size, num_cells)
+def check_overlap(particle_i, particle_j, particle_coordinates, squared_correlation_length):
+    xdiff = particle_coordinates[particle_i, 0] - particle_coordinates[particle_j, 0]
+    ydiff = particle_coordinates[particle_i, 1] - particle_coordinates[particle_j, 1]
+    zdiff = particle_coordinates[particle_i, 2] - particle_coordinates[particle_j, 2]
+    squared_distance = xdiff ** 2 + ydiff ** 2 + zdiff ** 2
+    if squared_correlation_length > squared_distance > 0:
+        return 1
+    else:
+        return 0
 
-    for frame in particle_coordinates:
-        for inner_cell_vector_index in loop_over_inner_cells(num_cells):
-            for neighbour_vector_index in loop_over_neighbour_cells(inner_cell_vector_index, num_cells):
-                pass  # do science
+
+def main(xyz_file_name):
+    bond_length = 1
+    particle_coordinates = coordinate_methods.read_xyz_file(xyz_file_name, 3)
+    simple_overlaps = get_simple_overlaps(particle_coordinates, bond_length)
+    cell_overlaps = get_cell_list_overlaps(particle_coordinates, bond_length)
+    print(simple_overlaps, cell_overlaps)
 
 
 if __name__ == '__main__':

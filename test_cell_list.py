@@ -25,20 +25,23 @@ class TestCellListMethods:
     # cubic unit cell of size [10, 7, 5]
     sample_coordinates = [np.array([[0, 0, 0], [0, 0, 5], [0, 7, 0], [0, 7, 5], [10, 0, 0], [10, 0, 5], [10, 7, 0], [10, 7, 5]])]
 
-    def test_count_bonded_particles(self):
-        assert cell_list.count_bonded_particles(self.sample_coordinates, bond_length=5) == 4
-        assert cell_list.count_bonded_particles(self.sample_coordinates, bond_length=10) == 16
+    def test_get_simple_overlaps(self):
+        assert cell_list.get_simple_overlaps(self.sample_coordinates, bond_length=5) == 4
+        assert cell_list.get_simple_overlaps(self.sample_coordinates, bond_length=10) == 16
+
+    def test_get_cell_list_overlaps(self):
+        assert cell_list.get_cell_list_overlaps(self.sample_coordinates, bond_length=5)[0] == 4
+        assert cell_list.get_cell_list_overlaps(self.sample_coordinates, bond_length=10)[0] == 16
 
     def test_cell_size(self):
         # Given some coordinates, check the correct number of cells are generated.
-
-        num_cells, cell_size, box_size = cell_list.get_cell_size(self.sample_coordinates, 1)
-        assert num_cells[0] == 10
-        assert num_cells[1] == 7
-        assert num_cells[2] == 5
-        assert math.isclose(cell_size[0], 1)
-        assert math.isclose(cell_size[1], 1)
-        assert math.isclose(cell_size[2], 1)
+        num_cells, cell_size, box_size = cell_list.get_cell_size(self.sample_coordinates, 2)
+        assert num_cells[0] == 5
+        assert num_cells[1] == 3
+        assert num_cells[2] == 2
+        assert math.isclose(cell_size[0], 2)
+        assert math.isclose(cell_size[1], 7/3)
+        assert math.isclose(cell_size[2], 2.5)
         assert box_size == [10, 7, 5]
 
     @staticmethod

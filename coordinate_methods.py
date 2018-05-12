@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def read_xyz_file(filename, dimensions):
     """
     A simple XYZ file reader. Assumes file is well formed. Not failsafe for ill formed files.
@@ -49,7 +50,7 @@ def wrap_coordinates(particle_coordinates, box_size):
     for frame_num in range(len(particle_coordinates)):
         for particle_num in range(len(particle_coordinates[frame_num])):
             for dimension in range(len(particle_coordinates[frame_num][particle_num])):
-                while particle_coordinates[frame_num][particle_num][dimension] > box_size[dimension]:
+                while particle_coordinates[frame_num][particle_num][dimension] >= box_size[dimension]:
                     particle_coordinates[frame_num][particle_num][dimension] -= box_size[dimension]
                 while particle_coordinates[frame_num][particle_num][dimension] < 0:
                     particle_coordinates[frame_num][particle_num][dimension] += box_size[dimension]
