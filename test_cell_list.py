@@ -8,17 +8,10 @@ class TestCoordinateMethods:
     @staticmethod
     def test_xyz_read():
         # Read the sample xyz file. Check coordinates are correct.
-        coordinates = coordinate_methods.read_xyz_file("sample_configuration.xyz", 3)
+        coordinates = coordinate_methods.read_xyz_file("sample_configurations/sample_configuration.xyz", 3)
 
         assert len(coordinates) == 1
-        assert len(coordinates[0]) == 125
-
-    @staticmethod
-    def test_coordinate_wrapping():
-        # Check sample coordaintes are coorectly wrapped.
-        wrapped_coordinates = coordinate_methods.wrap_coordinates([np.array([[0, 0, 0], [11, -1, 0], [11, 11, 12], [-1, -1, -1]])], [10, 10, 10])
-
-        assert np.array_equal(np.array([[0, 0, 0], [1, 9, 0], [1, 1, 2], [9, 9, 9]]), wrapped_coordinates[0]) is True
+        assert len(coordinates[0]) == 59
 
 
 class TestCellListMethods:
@@ -30,15 +23,25 @@ class TestCellListMethods:
         assert cell_list.get_simple_overlaps(self.sample_coordinates, bond_length=10) == 16
 
     def test_get_cell_list_overlaps(self):
-        assert cell_list.get_cell_list_overlaps(self.sample_coordinates, bond_length=5)[0] == 4
-        assert cell_list.get_cell_list_overlaps(self.sample_coordinates, bond_length=10)[0] == 16
+        assert cell_list.get_cell_list_overlaps(self.sample_coordinates, bond_length=5) == -1
+        real_coorindates = coordinate_methods.read_xyz_file("sample_configurations/sample_configuration.xyz", 3)
+        simple_overlap_count = cell_list.get_simple_overlaps(real_coorindates, bond_length=1)
+        cell_overlap_count = cell_list.get_cell_list_overlaps(real_coorindates, bond_length=1)[0]
+        assert simple_overlap_count == cell_overlap_count
+
+    @staticmethod
+    def test_large_system():
+        real_coorindates = coordinate_methods.read_xyz_file("sample_configurations/large_configuration.xyz", 3)
+        simple_overlap_count = cell_list.get_simple_overlaps(real_coorindates, bond_length=1)
+        cell_overlap_count = cell_list.get_cell_list_overlaps(real_coorindates, bond_length=1)[0]
+        assert simple_overlap_count == cell_overlap_count
 
     def test_cell_size(self):
         # Given some coordinates, check the correct number of cells are generated.
-        num_cells, cell_size, box_size = cell_list.get_cell_size(self.sample_coordinates, 2)
-        assert num_cells[0] == 5
-        assert num_cells[1] == 3
-        assert num_cells[2] == 2
+        num_cells, cell_size, box_size = cell_list.get_cell_size(self.sample_coordinates, correlation_length=2, pbcs=0)
+        assert num_cells[0] == 6
+        assert num_cells[1] == 4
+        assert num_cells[2] == 3
         assert math.isclose(cell_size[0], 2)
         assert math.isclose(cell_size[1], 7/3)
         assert math.isclose(cell_size[2], 2.5)

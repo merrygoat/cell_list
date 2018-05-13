@@ -35,24 +35,3 @@ def read_xyz_file(filename, dimensions):
     print("XYZ read complete.")
 
     return particle_positions
-
-
-def wrap_coordinates(particle_coordinates, box_size):
-    """Wrap coordinates into the box of size [[0, Lenx], [0, Leny], [0, Lenz]].
-     This is important for the cell indexing which needs all coords > 0 and < len.
-
-    :param particle_coordinates: an A by B by d array where A is num frames, B is num particles
-     and d is the number of dimensions
-    :param box_size: A d member tuple, the size of the box in each dimension.
-    :return: An A by B by d array of wrapped particle coordinates
-    """
-
-    for frame_num in range(len(particle_coordinates)):
-        for particle_num in range(len(particle_coordinates[frame_num])):
-            for dimension in range(len(particle_coordinates[frame_num][particle_num])):
-                while particle_coordinates[frame_num][particle_num][dimension] >= box_size[dimension]:
-                    particle_coordinates[frame_num][particle_num][dimension] -= box_size[dimension]
-                while particle_coordinates[frame_num][particle_num][dimension] < 0:
-                    particle_coordinates[frame_num][particle_num][dimension] += box_size[dimension]
-
-    return particle_coordinates

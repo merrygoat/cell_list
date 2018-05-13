@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.spatial.distance import cdist, squareform
 import math
-import coordinate_methods
 
 
 def get_simple_overlaps(particle_coordinates, bond_length):
@@ -20,7 +19,10 @@ def get_cell_list_overlaps(particle_coordinates, bond_length):
     sq_bond_length = bond_length ** 2
 
     num_cells, cell_size, box_size = get_cell_size(particle_coordinates, bond_length)
-    particle_coordinates = coordinate_methods.wrap_coordinates(particle_coordinates, box_size)
+    for num_cells_dimension in num_cells:
+        if num_cells_dimension < 3:
+            print("Cant do cell list with num_cells < 3 in any dimension.")
+            return -1
     cell_heads, links = setup_cell_list(particle_coordinates, cell_size, num_cells)
 
     overlap_count = []
@@ -42,7 +44,7 @@ def get_cell_list_overlaps(particle_coordinates, bond_length):
     return overlap_count
 
 
-def get_cell_size(particle_coordinates, correlation_length):
+def get_cell_size(particle_coordinates, correlation_length, pbcs=0):
     # Given a set of particle coordinates and a correlation length, generate cells
 
     spatial_dimensions = 3
@@ -65,6 +67,10 @@ def get_cell_size(particle_coordinates, correlation_length):
         box_size.append(max_coord[dimension] - min_coord[dimension])
         num_cells.append(math.floor(box_size[dimension] / correlation_length))
         cell_size.append(box_size[dimension] / num_cells[dimension])
+
+    if pbcs == 0:
+        for dimension_index, dimension in enumerate(num_cells):
+            num_cells[dimension_index] += 1
 
     return num_cells, cell_size, box_size
 
@@ -158,15 +164,3 @@ def check_overlap(particle_i, particle_j, particle_coordinates, squared_correlat
         return 1
     else:
         return 0
-
-
-def main(xyz_file_name):
-    bond_length = 1
-    particle_coordinates = coordinate_methods.read_xyz_file(xyz_file_name, 3)
-    simple_overlaps = get_simple_overlaps(particle_coordinates, bond_length)
-    cell_overlaps = get_cell_list_overlaps(particle_coordinates, bond_length)
-    print(simple_overlaps, cell_overlaps)
-
-
-if __name__ == '__main__':
-    main("sample_configuration.xyz")
