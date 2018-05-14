@@ -48,7 +48,7 @@ class TestCellListMethods:
         assert box_size == [10, 7, 5]
 
     @staticmethod
-    def test_get_scalar_index():
+    def test_get_scalar_cell_index():
         # Given cell indices and cell dimensions get a scalar cell index
 
         assert cell_list.get_scalar_cell_index([0, 0, 0], [10, 10, 10]) == 0
@@ -61,7 +61,7 @@ class TestCellListMethods:
         assert cell_list.get_scalar_cell_index([1, 1, 1], [5, 5, 5]) == 31
 
     @staticmethod
-    def test_get_cell_index():
+    def test_get_vector_cell_index():
         # Given a particle position and the size of the cells, find the cell indices of the particle
         assert cell_list.get_vector_cell_index([0, 1.5, 2.5], [1, 1, 1]) == [0, 1, 2]
 

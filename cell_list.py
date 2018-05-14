@@ -89,15 +89,12 @@ def get_scalar_cell_index(cell_indices, num_cells):
 
 
 def get_vector_cell_index(particle_position, cell_lengths):
-    x_index = int(particle_position[0] / cell_lengths[0])
-    y_index = int(particle_position[1] / cell_lengths[1])
-    z_index = int(particle_position[2] / cell_lengths[2])
-    return [x_index, y_index, z_index]
+    return [int(x/y) for x, y in zip(particle_position, cell_lengths)]
 
 
 def setup_cell_list(particle_coordinates, cell_size, num_cells):
     """
-    :param particle_coordinates:     A list of f numpy arrays of size N by d where f is the number of frames,
+    :param particle_coordinates: A list of f numpy arrays of size N by d where f is the number of frames,
      N is the number of particles and d is the number of spatial dimensions
     :param cell_size: a list of cell sizes, one value for each dimension
     :param num_cells: a list of integers, the total number of cells in each dimension
@@ -156,10 +153,8 @@ def loop_over_neighbour_cells(vector_cell_index, num_cells):
 
 
 def check_overlap(particle_i, particle_j, particle_coordinates, squared_correlation_length):
-    xdiff = particle_coordinates[particle_i, 0] - particle_coordinates[particle_j, 0]
-    ydiff = particle_coordinates[particle_i, 1] - particle_coordinates[particle_j, 1]
-    zdiff = particle_coordinates[particle_i, 2] - particle_coordinates[particle_j, 2]
-    squared_distance = xdiff ** 2 + ydiff ** 2 + zdiff ** 2
+    distance = particle_coordinates[particle_i, :] - particle_coordinates[particle_j, :]
+    squared_distance = distance[0] ** 2 + distance[1] ** 2 + distance[2] ** 2
     if squared_correlation_length > squared_distance > 0:
         return 1
     else:
